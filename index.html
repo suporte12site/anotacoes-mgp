@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Anotações do Plantão</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-4">
+
+  <div class="max-w-xl mx-auto bg-white shadow-xl rounded-xl p-6">
+    <h1 class="text-2xl font-bold mb-4 text-center text-blue-600">📋 Anotações do Plantão</h1>
+
+    <form id="anotacaoForm" class="space-y-4">
+      <input name="nome" type="text" placeholder="Seu nome" required
+        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+
+      <textarea name="anotacao" placeholder="Digite sua anotação..." required rows="4"
+        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+
+      <button type="submit"
+        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 w-full transition">Salvar Anotação</button>
+    </form>
+
+    <div id="resposta" class="mt-4 text-center text-green-600 font-semibold"></div>
+
+    <hr class="my-6">
+
+    <h2 class="text-xl font-semibold text-gray-800 mb-2">📚 Anotações salvas</h2>
+    <div id="listaAnotacoes" class="space-y-4 text-sm text-gray-700"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById("anotacaoForm");
+    const lista = document.getElementById("listaAnotacoes");
+    const resposta = document.getElementById("resposta");
+
+    const url = "SUA_URL_DO_APPS_SCRIPT";
+
+    async function carregarAnotacoes() {
+      const res = await fetch(url);
+      const dados = await res.json();
+
+      lista.innerHTML = dados.reverse().map(item => `
+        <div class="bg-gray-50 border rounded p-3">
+          <p><strong>${item.nome}</strong> <span class="text-gray-500 text-xs">(${new Date(item.data).toLocaleString()})</span></p>
+          <p class="mt-1">${item.anotacao}</p>
+        </div>
+      `).join('');
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const data = {
+        nome: form.nome.value,
+        anotacao: form.anotacao.value
+      };
+
+      const respostaFetch = await fetch(url, {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: {
+          "Content-Type": "application/json"
+        }
+      });
+
+      const resultado = await respostaFetch.json();
+      resposta.innerText = resultado.mensagem;
+      form.reset();
+      carregarAnotacoes();
+    });
+
+    carregarAnotacoes();
+  </script>
+
+</body>
+</html>
