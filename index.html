@@ -2,77 +2,80 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Anotações do Plantão</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f8f8f8;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-sizing: border-box;
+    }
+    button {
+      margin-top: 15px;
+      padding: 12px 20px;
+      background: #0066cc;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    #mensagem {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+  </style>
 </head>
-<body class="bg-gray-100 p-4">
+<body>
+  <h2>Anotações do Plantão</h2>
 
-  <div class="max-w-xl mx-auto bg-white shadow-xl rounded-xl p-6">
-    <h1 class="text-2xl font-bold mb-4 text-center text-blue-600">📋 Anotações do Plantão</h1>
+  <input type="text" id="nome" placeholder="Seu nome">
+  <textarea id="anotacao" placeholder="Escreva sua anotação aqui..."></textarea>
+  <button onclick="salvarAnotacao()">Salvar Anotação</button>
 
-    <form id="anotacaoForm" class="space-y-4">
-      <input name="nome" type="text" placeholder="Seu nome" required
-        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-
-      <textarea name="anotacao" placeholder="Digite sua anotação..." required rows="4"
-        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
-
-      <button type="submit"
-        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 w-full transition">Salvar Anotação</button>
-    </form>
-
-    <div id="resposta" class="mt-4 text-center text-green-600 font-semibold"></div>
-
-    <hr class="my-6">
-
-    <h2 class="text-xl font-semibold text-gray-800 mb-2">📚 Anotações salvas</h2>
-    <div id="listaAnotacoes" class="space-y-4 text-sm text-gray-700"></div>
-  </div>
+  <div id="mensagem"></div>
 
   <script>
-    const form = document.getElementById("anotacaoForm");
-    const lista = document.getElementById("listaAnotacoes");
-    const resposta = document.getElementById("resposta");
+    const url = "https://script.google.com/macros/s/AKfycbxTR8tz7d5rJA-VFl9Ar1zUxoYXu6s5uey3tFvQmrcOdQZbxNe-ffEBuGYCqjsr5_g/exec";
 
-    const url = "https://script.google.com/macros/s/AKfycbzfC5jkjNIKQ24q_OcMqxKU6-qj1IyFC09SeUAyRZOR_iJKORx9S5TFa45BdRqz7zXcfw/exec";
+    function salvarAnotacao() {
+      const nome = document.getElementById("nome").value.trim();
+      const anotacao = document.getElementById("anotacao").value.trim();
 
-    async function carregarAnotacoes() {
-      const res = await fetch(url);
-      const dados = await res.json();
+      if (!nome || !anotacao) {
+        document.getElementById("mensagem").innerText = "Por favor, preencha todos os campos.";
+        return;
+      }
 
-      lista.innerHTML = dados.reverse().map(item => `
-        <div class="bg-gray-50 border rounded p-3">
-          <p><strong>${item.nome}</strong> <span class="text-gray-500 text-xs">(${new Date(item.data).toLocaleString()})</span></p>
-          <p class="mt-1">${item.anotacao}</p>
-        </div>
-      `).join('');
-    }
-
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      const data = {
-        nome: form.nome.value,
-        anotacao: form.anotacao.value
-      };
-
-      const respostaFetch = await fetch(url, {
+      fetch(url, {
         method: "POST",
-        body: JSON.stringify(data),
+        body: JSON.stringify({ nome, anotacao }),
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         }
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("mensagem").innerText = data.mensagem || "Anotação salva com sucesso!";
+        document.getElementById("nome").value = "";
+        document.getElementById("anotacao").value = "";
+      })
+      .catch(err => {
+        console.error(err);
+        document.getElementById("mensagem").innerText = "Erro ao salvar anotação.";
       });
-
-      const resultado = await respostaFetch.json();
-      resposta.innerText = resultado.mensagem;
-      form.reset();
-      carregarAnotacoes();
-    });
-
-    carregarAnotacoes();
+    }
   </script>
-
 </body>
 </html>
